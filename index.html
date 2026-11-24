@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>תעלומת מתח הפנים – מעבדת המים הכיתתית</title>
+  <!-- טעינת Tailwind CSS לעיצוב רספונסיבי ומהיר -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- טעינת גופן עברי ברור, ידידותי וקריא מרחוק -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+
+  <style>
+    * {
+      font-family: 'Rubik', sans-serif;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 20% 20%, #e0f2fe 0%, #bae6fd 45%, #7dd3fc 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* בועות רקע עדינות לאווירת מעבדה */
+    .bg-bubble {
+      position: fixed;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.15));
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      pointer-events: none;
+      animation: floatUp linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes floatUp {
+      0% {
+        transform: translateY(110vh) scale(0.8);
+        opacity: 0;
+      }
+      15% {
+        opacity: 0.7;
+      }
+      85% {
+        opacity: 0.7;
+      }
+      100% {
+        transform: translateY(-15vh) scale(1.15);
+        opacity: 0;
+      }
+    }
+
+    /* אפקט לחיצה תלת-ממדי לכפתורים גדולים למקרן */
+    .btn-3d {
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.15s ease;
+      box-shadow: 0 6px 0 rgba(15, 23, 42, 0.25), 0 12px 20px rgba(15, 23, 42, 0.15);
+    }
+
+    .btn-3d:hover:not(:disabled) {
+      filter: brightness(1.05);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 rgba(15, 23, 42, 0.25), 0 16px 24px rgba(15, 23, 42, 0.2);
+    }
+
+    .btn-3d:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(15, 23, 42, 0.25), 0 4px 8px rgba(15, 23, 42, 0.15);
+    }
+
+    .btn-3d:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* אנימציית כניסה למסכים */
+    .screen-fade {
+      animation: popIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes popIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.96) translateY(12px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* אנימציית רטט למולקולות */
+    @keyframes pulseMolecule {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.07); }
+    }
+
+    .molecule-pulse {
+      animation: pulseMolecule 2.4s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body class="text-slate-900 flex flex-col justify-between relative">
+
+  <!-- בועות רקע -->
+  <div id="bubbles-container" aria-hidden="true"></div>
+
+  <!-- סרגל עליון: כותרת, ניקוד, שלבים, סאונד ומסך מלא -->
+  <header class="relative z-10 w-full max-w-6xl mx-auto px-4 pt-4 pb-2">
+    <div class="bg-white/90 backdrop-blur-md border-2 border-sky-200 rounded-3xl px-5 py-3 shadow-lg flex flex-wrap items-center justify-between gap-3">
+      <!-- לוגו ושם המעבדה -->
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center text-white text-2xl shadow-md">
+          💧
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black text-sky-950 leading-tight">תעלומת מתח הפנים</h1>
+          <p class="text-xs sm:text-sm font-medium text-sky-700">מעבדת המים הכיתתית • כיתות ג׳–ה׳</p>
+        </div>
+      </div>
+
+      <!-- מחוון התקדמות שלבים -->
+      <nav id="stage-stepper" class="hidden md:flex items-center gap-2 bg-sky-50 px-4 py-2 rounded-2xl border border-sky-200">
+        <span data-step="0" class="step-pill px-3 py-1 rounded-xl text-sm font-bold bg-sky-600 text-white">פתיחה</span>
+        <span class="text-sky-300 font-bold">◀</span>
+        <span data-step="1" class="step-pill px-3 py-1 rounded-xl text-sm font-bold text-sky-700">1. טיפות על מטבע</span>
+        <span class="text-sky-300 font-bold">◀</span>
+        <span data-step="2" class="step-pill px-3 py-1 rounded-xl text-sm font-bold text-sky-700">2. קסם הסבון</span>
+        <span class="text-sky-300 font-bold">◀</span>
+        <span data-step="3" class="step-pill px-3 py-1 rounded-xl text-sm font-bold text-sky-700">3. חידון המומחים</span>
+        <span class="text-sky-300 font-bold">◀</span>
+        <span data-step="4" class="step-pill px-3 py-1 rounded-xl text-sm font-bold text-sky-700">תעודה</span>
+      </nav>
+
+      <!-- ניקוד וכפתורי שליטה למקרן -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="bg-amber-100 border-2 border-amber-300 px-4 py-1.5 rounded-2xl flex items-center gap-2 shadow-inner">
+          <span class="text-xl">⭐</span>
+          <span class="text-sm sm:text-base font-bold text-amber-900">ניקוד כיתתי:</span>
+          <span id="score-display" class="text-xl sm:text-2xl font-black text-amber-700">0</span>
+        </div>
+
+        <button id="btn-sound" onclick="toggleSound()" title="הפעלה/השתקת צלילים"
+          class="p-3 rounded-2xl bg-sky-100 hover:bg-sky-200 border-2 border-sky-300 text-sky-900 font-bold text-xl transition cursor-pointer">
+          🔊
+        </button>
+
+        <button id="btn-fullscreen" onclick="toggleFullscreen()" title="מסך מלא למקרן"
+          class="p-3 rounded-2xl bg-indigo-100 hover:bg-indigo-200 border-2 border-indigo-300 text-indigo-900 font-bold text-sm sm:text-base flex items-center gap-1.5 transition cursor-pointer">
+          <span>⛶</span>
+          <span class="hidden sm:inline">מסך מלא</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- אזור התוכן המרכזי -->
+  <main class="relative z-10 flex-1 w-full max-w-6xl mx-auto px-4 py-3 flex flex-col justify-center">
+
+    <!-- ==================== מסך 0: מסך פתיחה ==================== -->
+    <section id="screen-0" class="screen-fade bg-white/95 backdrop-blur-md border-4 border-sky-300 rounded-[2rem] p-6 sm:p-10 shadow-2xl">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <!-- טקסט פתיחה -->
+        <div class="lg:col-span-7 space-y-5">
+          <span class="inline-block bg-sky-100 text-sky-800 border border-sky-300 font-extrabold px-4 py-1.5 rounded-full text-sm sm:text-base">
+            🔬 משימת חקר כיתתית במדעים
+          </span>
+          <h2 class="text-3xl sm:text-5xl font-black text-sky-950 leading-tight">
+            מה מחזיק את המים יחד כמו <span class="text-blue-600 underline decoration-sky-300">קרום בלתי נראה</span>?
+          </h2>
+          <p class="text-lg sm:text-2xl text-slate-700 leading-relaxed font-medium">
+            בתוך כל טיפת מים מסתתרים מיליארדי חלקיקים זעירים (מולקולות מים) שמושכים זה את זה בחוזקה – ממש כאילו הם מחזיקים ידיים!
+          </p>
+          <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-4 sm:p-5">
+            <p class="text-base sm:text-xl font-bold text-blue-950">
+              💡 התופעה הזו נקראת <span class="text-blue-700 font-black">״מֶתַח פָּנִים״</span> – והיא גורמת לפני המים להתנהג כמו יריעה מתוחה וגמישה!
+            </p>
+          </div>
+          <div class="pt-2">
+            <button onclick="goToScreen(1)"
+              class="btn-3d w-full sm:w-auto bg-gradient-to-l from-blue-600 to-sky-500 text-white text-2xl sm:text-3xl font-black px-10 py-5 rounded-3xl cursor-pointer flex items-center justify-center gap-3">
+              <span>מתחילים בניסויים!</span>
+              <span>🚀</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- איור SVG אינטראקטיבי של מולקולות מים מחזיקות ידיים -->
+        <div class="lg:col-span-5 flex flex-col items-center">
+          <div class="w-full bg-gradient-to-b from-sky-100 to-blue-200 border-4 border-sky-300 rounded-3xl p-5 shadow-inner flex flex-col items-center">
+            <svg viewBox="0 0 360 270" class="w-full max-w-sm h-auto drop-shadow">
+              <!-- רקע מים -->
+              <rect x="10" y="95" width="340" height="165" rx="22" fill="#38bdf8" opacity="0.35" />
+              <!-- קו מתח הפנים המתוח -->
+              <path d="M 15 95 Q 180 108 345 95" stroke="#0284c7" stroke-width="7" fill="none" stroke-linecap="round" />
+              <text x="180" y="72" text-anchor="middle" fill="#0369a1" font-size="17" font-weight="800">קרום מתוח על פני המים!</text>
+
+              <!-- קווי משיכה (ידיים) בין המולקולות -->
+              <g stroke="#0369a1" stroke-width="4" stroke-dasharray="6,4">
+                <line x1="75" y1="115" x2="145" y2="118" />
+                <line x1="145" y1="118" x2="215" y2="118" />
+                <line x1="215" y1="118" x2="285" y2="115" />
+                <line x1="110" y1="185" x2="180" y2="185" />
+                <line x1="180" y1="185" x2="250" y2="185" />
+                <line x1="75" y1="115" x2="110" y2="185" />
+                <line x1="145" y1="118" x2="110" y2="185" />
+                <line x1="145" y1="118" x2="180" y2="185" />
+                <line x1="215" y1="118" x2="180" y2="185" />
+                <line x1="215" y1="118" x2="250" y2="185" />
+                <line x1="285" y1="115" x2="250" y2="185" />
+              </g>
+
+              <!-- מולקולות שורה עליונה (מחוזקות במיוחד לצדדים ולמטה) -->
+              <g class="molecule-pulse">
+                <circle cx="75" cy="115" r="24" fill="#0284c7" stroke="#ffffff" stroke-width="3" />
+                <text x="75" y="121" text-anchor="middle" fill="white" font-size="14" font-weight="bold">H₂O</text>
+              </g>
+              <g class="molecule-pulse" style="animation-delay: 0.3s">
+                <circle cx="145" cy="118" r="24" fill="#0284c7" stroke="#ffffff" stroke-width="3" />
+                <text x="145" y="124" text-anchor="middle" fill="white" font-size="14" font-weight="bold">H₂O</text>
+              </g>
+              <g class="molecule-pulse" style="animation-delay: 0.6s">
+                <circle cx="215" cy="118" r="24" fill="#0284c7" stroke="#ffffff" stroke-width="3" />
+                <text x="215" y="124" text-anchor="middle" fill="white" font-size="14" font-weight="bold">H₂O</text>
+              </g>
+              <g class="molecule-pulse" style="animation-delay: 0.9s">
+                <circle cx="285" cy="115" r="24" fill="#0284c7" stroke="#ffffff" stroke-width="3" />
+                <text x="285" y="121" text-anchor="middle" fill="white" font-size="14" font-weight="bold">H₂O</text>
+              </g>
+
+              <!-- מולקולות שורה תחתונה -->
+              <g>
+                <circle cx="110" cy="185" r="22" fill="#38bdf8" stroke="#ffffff" stroke-width="3" />
+                <text x="110" y="191" text-anchor="middle" fill="#0c4a6e" font-size="13" font-weight="bold">H₂O</text>
+                <circle cx="180" cy="185" r="22" fill="#38bdf8" stroke="#ffffff" stroke-width="3" />
+                <text x="180" y="191" text-anchor="middle" fill="#0c4a6e" font-size="13" font-weight="bold">H₂O</text>
+                <circle cx="250" cy="185" r="22" fill="#38bdf8" stroke="#ffffff" stroke-width="3" />
+                <text x="250" y="191" text-anchor="middle" fill="#0c4a6e" font-size="13" font-weight="bold">H₂O</text>
+              </g>
+            </svg>
+            <p class="text-center text-sky-950 font-bold text-base sm:text-lg mt-2">
+              כל מולקולת מים מושכת את שכנותיה מכל הכיוונים!
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== מסך 1: מעבדת הטיפות על המטבע ==================== -->
+    <section id="screen-1" class="hidden screen-fade bg-white/95 backdrop-blur-md border-4 border-sky-300 rounded-[2rem] p-5 sm:p-8 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-sky-100 pb-3 mb-5">
+        <div>
+          <span class="text-sm font-extrabold text-sky-600 uppercase">תחנת חקר 1 מתוך 3</span>
+          <h2 class="text-2xl sm:text-4xl font-black text-sky-950">🪙 כמה טיפות מים יכנסו על מטבע אחד?</h2>
+        </div>
+        <div class="bg-sky-100 px-4 py-2 rounded-2xl border border-sky-300 font-bold text-sky-900 text-base sm:text-lg">
+          ניסוי המניסקוס (כיפת המים)
+        </div>
+      </div>
+
+      <!-- שלב א׳ בתוך התחנה: סקר הימור כיתתי -->
+      <div id="coin-poll-box" class="bg-amber-50 border-3 border-amber-300 rounded-3xl p-6 text-center space-y-5">
+        <div class="inline-block bg-amber-200 text-amber-950 font-black px-5 py-1.5 rounded-full text-base sm:text-lg">
+          🙋‍♂️🙋‍♀️ הצבעה כיתתית לפני שמתחילים!
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-black text-slate-900">
+          הרימו ידיים בכיתה: כמה טיפות מים לדעתכם יחזיקו מעמד על המטבע לפני שהכיפה תישבר והמים ישפכו?
+        </h3>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto pt-2">
+          <button onclick="selectCoinPrediction(0, '5 עד 10 טיפות')"
+            class="btn-3d bg-white hover:bg-amber-100 border-3 border-amber-400 rounded-2xl p-5 text-xl sm:text-2xl font-black text-slate-900 cursor-pointer">
+            💧 5–10 טיפות
+          </button>
+          <button onclick="selectCoinPrediction(1, '12 עד 18 טיפות')"
+            class="btn-3d bg-white hover:bg-amber-100 border-3 border-amber-400 rounded-2xl p-5 text-xl sm:text-2xl font-black text-slate-900 cursor-pointer">
+            💧💧 12–18 טיפות
+          </button>
+          <button onclick="selectCoinPrediction(2, '25 עד 30 טיפות')"
+            class="btn-3d bg-white hover:bg-amber-100 border-3 border-amber-400 rounded-2xl p-5 text-xl sm:text-2xl font-black text-slate-900 cursor-pointer">
+            🌊 25–30 טיפות
+          </button>
+          <button onclick="selectCoinPrediction(3, 'מעל 50 טיפות')"
+            class="btn-3d bg-white hover:bg-amber-100 border-3 border-amber-400 rounded-2xl p-5 text-xl sm:text-2xl font-black text-slate-900 cursor-pointer">
+            🌊🌊 מעל 50 טיפות
+          </button>
+        </div>
+        <p class="text-slate-600 font-medium text-base sm:text-lg">בחרו את ההימור שקיבל הכי הרבה קולות בכיתה כדי לפתוח את הפיפטה!</p>
+      </div>
+
+      <!-- שלב ב׳ בתוך התחנה: הסימולציה האינטראקטיבית -->
+      <div id="coin-lab-box" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <!-- קנבס המטבע והפיפטה -->
+        <div class="lg:col-span-7 flex flex-col items-center">
+          <div class="w-full bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-3 border-4 border-sky-400 shadow-inner relative">
+            <canvas id="coin-canvas" class="w-full h-72 sm:h-80 rounded-2xl block"></canvas>
+            <!-- תגית הימור הכיתה -->
+            <div class="absolute top-5 right-5 bg-white/90 backdrop-blur px-3.5 py-1.5 rounded-xl text-sm sm:text-base font-bold text-slate-800 shadow">
+              הימור הכיתה: <span id="chosen-prediction-label" class="text-blue-700 font-black"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- לוח בקרה ומונה טיפות -->
+        <div class="lg:col-span-5 flex flex-col justify-between space-y-4">
+          <div class="bg-sky-50 border-3 border-sky-200 rounded-3xl p-5 text-center">
+            <p class="text-lg font-bold text-sky-800">מספר הטיפות על המטבע:</p>
+            <div class="flex items-baseline justify-center gap-2 my-1">
+              <span id="drop-counter" class="text-6xl sm:text-7xl font-black text-blue-600">0</span>
+              <span class="text-2xl font-bold text-sky-900">טיפות</span>
+            </div>
+            <p id="coin-status-text" class="text-base sm:text-lg font-bold text-slate-700 mt-2">
+              לחצו על הכפתור כדי לטפטף טיפה ראשונה על המטבע!
+            </p>
+          </div>
+
+          <!-- כפתורי טפטוף -->
+          <div id="coin-controls" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="btn-add-drop" onclick="addWaterDrop(1)"
+              class="btn-3d bg-gradient-to-b from-sky-400 to-blue-600 text-white text-xl sm:text-2xl font-black py-4 px-5 rounded-2xl cursor-pointer flex items-center justify-center gap-2">
+              <span>💧</span>
+              <span>טפטף טיפה (+1)</span>
+            </button>
+            <button id="btn-add-five" onclick="addWaterDrop(5)"
+              class="btn-3d bg-gradient-to-b from-cyan-500 to-teal-600 text-white text-xl sm:text-2xl font-black py-4 px-5 rounded-2xl cursor-pointer flex items-center justify-center gap-2">
+              <span>💦</span>
+              <span>טפטף 5 טיפות</span>
+            </button>
+          </div>
+
+          <!-- תיבת הסבר מדעי לאחר שהכיפה נשברת -->
+          <div id="coin-result-box" class="hidden bg-emerald-50 border-3 border-emerald-400 rounded-3xl p-5 space-y-3">
+            <h4 class="text-xl sm:text-2xl font-black text-emerald-900">
+              💥 וואו! המטבע החזיק <span id="final-drop-count">28</span> טיפות שלמות!
+            </h4>
+            <p class="text-base sm:text-lg text-slate-800 leading-relaxed font-medium">
+              <strong>למה נוצרה כיפה גבוהה בלי להישפך?</strong><br />
+              מולקולות המים משכו זו את זו פנימה בחוזקה ושמרו על צורת הכיפה, עד שבטיפה ה־<span id="final-drop-count-2">28</span> כוח הכבידה ניצח את מתח הפנים והמים גלשו!
+            </p>
+            <div class="flex flex-wrap gap-3 pt-1">
+              <button onclick="resetCoinLab()"
+                class="btn-3d bg-white border-2 border-slate-300 text-slate-800 font-bold px-4 py-3 rounded-2xl text-base cursor-pointer">
+                🔄 נסו שוב
+              </button>
+              <button onclick="goToScreen(2)"
+                class="btn-3d flex-1 bg-gradient-to-l from-emerald-600 to-green-500 text-white font-black px-6 py-3 rounded-2xl text-xl cursor-pointer">
+                לניסוי הבא: קסם הסבון ◀
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== מסך 2: ניסוי הסבון ופלפל השחור ==================== -->
+    <section id="screen-2" class="hidden screen-fade bg-white/95 backdrop-blur-md border-4 border-sky-300 rounded-[2rem] p-5 sm:p-8 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-sky-100 pb-3 mb-5">
+        <div>
+          <span class="text-sm font-extrabold text-sky-600 uppercase">תחנת חקר 2 מתוך 3</span>
+          <h2 class="text-2xl sm:text-4xl font-black text-sky-950">🧼 ניסוי הפלפל השחור וטיפת הסבון</h2>
+        </div>
+        <div class="bg-purple-100 px-4 py-2 rounded-2xl border border-purple-300 font-bold text-purple-900 text-base sm:text-lg">
+          איך שוברים את מתח הפנים?
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+        <!-- קערת המים עם גרגירי הפלפל -->
+        <div class="lg:col-span-6 flex flex-col items-center">
+          <div class="w-full bg-gradient-to-br from-sky-100 to-indigo-100 border-4 border-sky-300 rounded-3xl p-4 flex flex-col items-center shadow-inner">
+            <canvas id="pepper-canvas" class="w-full max-w-md h-72 sm:h-80 rounded-2xl block"></canvas>
+            <p class="text-sm sm:text-base font-bold text-sky-900 mt-2">
+              מבט מלמעלה על קערת מים ועליה צפים גרגירי פלפל שחור קלים
+            </p>
+          </div>
+        </div>
+
+        <!-- בחירת כלי לטבילה במרכז הקערה -->
+        <div class="lg:col-span-6 space-y-4">
+          <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4">
+            <h3 class="text-xl sm:text-2xl font-black text-sky-950 mb-1">
+              🤔 מה יקרה אם ניגע במרכז הקערה?
+            </h3>
+            <p class="text-base sm:text-lg text-slate-700 font-medium">
+              גרגירי הפלפל צפים על גבי ״הקרום המתוח״ של המים. בחרו יחד בכיתה איזה קיסם לטבול במרכז הקערה:
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button onclick="testPepperTool('dry')"
+              class="btn-3d bg-amber-100 hover:bg-amber-200 border-3 border-amber-400 rounded-2xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer">
+              <span class="text-4xl">🥢</span>
+              <span class="text-lg sm:text-xl font-black text-amber-950">קיסם עץ יבש</span>
+            </button>
+
+            <button onclick="testPepperTool('water')"
+              class="btn-3d bg-sky-100 hover:bg-sky-200 border-3 border-sky-400 rounded-2xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer">
+              <span class="text-4xl">💧</span>
+              <span class="text-lg sm:text-xl font-black text-sky-950">קיסם טבול במים</span>
+            </button>
+
+            <button onclick="testPepperTool('soap')"
+              class="btn-3d bg-pink-100 hover:bg-pink-200 border-3 border-pink-400 rounded-2xl p-4 flex flex-col items-center text-center gap-2 cursor-pointer">
+              <span class="text-4xl">🫧</span>
+              <span class="text-lg sm:text-xl font-black text-pink-950">קיסם עם סבון כלים</span>
+            </button>
+          </div>
+
+          <!-- משוב והסבר מדעי לניסוי הפלפל -->
+          <div id="pepper-feedback" class="bg-white border-3 border-slate-200 rounded-3xl p-5 min-h-[150px] flex flex-col justify-between">
+            <div>
+              <h4 id="pepper-feedback-title" class="text-xl sm:text-2xl font-black text-slate-800 mb-2">
+                👈 בחרו אחד משלושת הקיסמים כדי לבדוק!
+              </h4>
+              <p id="pepper-feedback-text" class="text-base sm:text-lg text-slate-700 leading-relaxed font-medium">
+                נסו לבדוק קודם מה קורה עם קיסם יבש או קיסם עם מים, ורק אז בדקו את קיסם הסבון!
+              </p>
+            </div>
+
+            <div id="pepper-next-actions" class="hidden flex flex-wrap items-center justify-between gap-3 pt-4 mt-3 border-t border-slate-200">
+              <button onclick="resetPepperLab()"
+                class="btn-3d bg-slate-100 border-2 border-slate-300 text-slate-800 font-bold px-4 py-2.5 rounded-2xl text-base cursor-pointer">
+                🔄 פזרו פלפל מחדש
+              </button>
+              <button onclick="goToScreen(3)"
+                class="btn-3d bg-gradient-to-l from-indigo-600 to-blue-600 text-white font-black px-6 py-3 rounded-2xl text-xl cursor-pointer">
+                לשלב 3: חידון המומחים ◀
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== מסך 3: חידון המומחים הכיתתי ==================== -->
+    <section id="screen-3" class="hidden screen-fade bg-white/95 backdrop-blur-md border-4 border-sky-300 rounded-[2rem] p-5 sm:p-8 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-sky-100 pb-3 mb-5">
+        <div>
+          <span class="text-sm font-extrabold text-indigo-600 uppercase">תחנת חקר 3 מתוך 3</span>
+          <h2 class="text-2xl sm:text-4xl font-black text-sky-950">🏆 חידון המומחים: צף, נמתח או נשבר?</h2>
+        </div>
+        <div class="bg-indigo-100 px-4 py-2 rounded-2xl border border-indigo-300 font-black text-indigo-900 text-lg sm:text-xl">
+          שאלה <span id="quiz-progress">1 / 5</span>
+        </div>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-5">
+        <!-- כרטיס השאלה -->
+        <div class="bg-gradient-to-l from-sky-50 to-indigo-50 border-3 border-sky-200 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-center gap-5">
+          <div id="quiz-emoji" class="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-3xl bg-white border-3 border-sky-300 shadow-md flex items-center justify-center text-5xl sm:text-6xl">
+            🦟
+          </div>
+          <div class="text-center sm:text-right">
+            <span id="quiz-tag" class="inline-block bg-indigo-200 text-indigo-950 text-xs sm:text-sm font-extrabold px-3 py-1 rounded-full mb-2">
+              מתח פנים בטבע
+            </span>
+            <h3 id="quiz-question" class="text-xl sm:text-3xl font-black text-slate-900 leading-snug">
+              טוען שאלה...
+            </h3>
+          </div>
+        </div>
+
+        <!-- אפשרויות תשובה גדולות -->
+        <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- יאוכלס דינמית -->
+        </div>
+
+        <!-- תיבת משוב והסבר לאחר בחירת תשובה -->
+        <div id="quiz-feedback-box" class="hidden rounded-3xl p-5 border-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="space-y-1">
+            <h4 id="quiz-feedback-title" class="text-xl sm:text-2xl font-black"></h4>
+            <p id="quiz-feedback-explanation" class="text-base sm:text-lg font-medium text-slate-800"></p>
+          </div>
+          <button id="btn-next-question" onclick="nextQuizQuestion()"
+            class="btn-3d shrink-0 bg-gradient-to-l from-blue-600 to-sky-500 text-white font-black text-xl px-7 py-4 rounded-2xl cursor-pointer">
+            לשאלה הבאה ◀
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== מסך 4: מסך סיום ותעודת חוקרי מים ==================== -->
+    <section id="screen-4" class="hidden screen-fade bg-white/95 backdrop-blur-md border-4 border-amber-300 rounded-[2rem] p-6 sm:p-10 shadow-2xl text-center">
+      <div class="max-w-4xl mx-auto space-y-6">
+        <div class="inline-flex items-center gap-2 bg-amber-100 border-2 border-amber-400 text-amber-950 font-black px-6 py-2 rounded-full text-lg sm:text-xl">
+          <span>🎓</span>
+          <span>תעודת הסמכה מדעית לכיתה</span>
+          <span>🏅</span>
+        </div>
+
+        <h2 class="text-3xl sm:text-5xl font-black text-sky-950">
+          כל הכבוד! פיצחתם את תעלומת מתח הפנים!
+        </h2>
+
+        <div class="bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-100 border-3 border-amber-300 rounded-3xl p-5 inline-block px-10 shadow-inner">
+          <p class="text-lg font-bold text-amber-900">הניקוד הכיתתי הסופי שלכם:</p>
+          <p class="text-5xl sm:text-6xl font-black text-amber-700 mt-1"><span id="final-score">0</span> נקודות ⭐</p>
+        </div>
+
+        <!-- 3 כללי הזהב של מתח פנים -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right pt-2">
+          <div class="bg-sky-50 border-3 border-sky-200 rounded-3xl p-5 space-y-2">
+            <div class="text-4xl">🤝</div>
+            <h3 class="text-xl font-black text-sky-950">1. מולקולות מחזיקות ידיים</h3>
+            <p class="text-base text-slate-700 font-medium">
+              מולקולות המים נמשכות זו לזו בחוזקה ויוצרות על פני המים מעין קרום שקוף, גמיש ומתוח.
+            </p>
+          </div>
+
+          <div class="bg-blue-50 border-3 border-blue-200 rounded-3xl p-5 space-y-2">
+            <div class="text-4xl">🪙</div>
+            <h3 class="text-xl font-black text-blue-950">2. כיפות וחרקים צפים</h3>
+            <p class="text-base text-slate-700 font-medium">
+              בזכות מתח הפנים טיפות מים מתעגלות לכיפה גבוהה על מטבע, וחרקים קלים כמו רץ-המים הולכים על המים בלי לשקוע.
+            </p>
+          </div>
+
+          <div class="bg-pink-50 border-3 border-pink-200 rounded-3xl p-5 space-y-2">
+            <div class="text-4xl">🫧</div>
+            <h3 class="text-xl font-black text-pink-950">3. הסבון שובר את המתח</h3>
+            <p class="text-base text-slate-700 font-medium">
+              סבון מחליש ושובר את הקשרים בין מולקולות המים – כך הוא מפרק לכלוך ושומנים ומעיף את גרגירי הפלפל לצדדים!
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-4">
+          <button onclick="restartWholeGame()"
+            class="btn-3d bg-gradient-to-l from-blue-600 to-sky-500 text-white text-2xl font-black px-10 py-4 rounded-3xl cursor-pointer">
+            🔄 שחקו שוב מהתחלה
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- פוטר קטן ונקי -->
+  <footer class="relative z-10 text-center py-2 text-xs sm:text-sm font-bold text-sky-950/75">
+    מעבדת מדעים אינטראקטיבית להקרנה בכיתה • נושא: מתח פנים (Surface Tension)
+  </footer>
+
+  <script>
+    /* =====================================================================
+       1. מערכת צלילים מובנית (Web Audio API) ללא קבצים חיצוניים
+       ===================================================================== */
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('btn-sound');
+      btn.textContent = soundEnabled ? '🔊' : '🔇';
+      if (soundEnabled) {
+        initAudio();
+        playTone(520, 'sine', 0.12, 0.15);
+      }
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.15, volume = 0.2, slideTo = null) {
+      if (!soundEnabled) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        if (slideTo) {
+          osc.frequency.exponentialRampToValueAtTime(slideTo, audioCtx.currentTime + duration);
+        }
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        // התעלמות משגיאות אודיו אם הדפדפן חוסם
+      }
+    }
+
+    function playDropSound(dropNum) {
+      // צליל טיפת מים שעולה מעט בגובה ככל שהכיפה מתמלאת
+      const baseFreq = 360 + dropNum * 12;
+      playTone(baseFreq, 'sine', 0.16, 0.25, baseFreq * 1.45);
+    }
+
+    function playSplashSound() {
+      playTone(300, 'triangle', 0.35, 0.25, 95);
+      setTimeout(() => playTone(210, 'sine', 0.3, 0.2, 70), 80);
+    }
+
+    function playWhooshSound() {
+      playTone(680, 'sine', 0.35, 0.22, 190);
+    }
+
+    function playSuccessSound() {
+      playTone(523.25, 'triangle', 0.14, 0.22); // C5
+      setTimeout(() => playTone(659.25, 'triangle', 0.14, 0.22), 110); // E5
+      setTimeout(() => playTone(783.99, 'triangle', 0.28, 0.25), 220); // G5
+    }
+
+    function playErrorSound() {
+      playTone(260, 'sawtooth', 0.18, 0.15, 190);
+    }
+
+    /* =====================================================================
+       2. ניווט, ניקוד ומסך מלא
+       ===================================================================== */
+    let currentScreen = 0;
+    let totalScore = 0;
+
+    function addScore(points) {
+      totalScore += points;
+      document.getElementById('score-display').textContent = totalScore;
+      document.getElementById('final-score').textContent = totalScore;
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    }
+
+    function goToScreen(screenIdx) {
+      initAudio();
+      playTone(480, 'sine', 0.1, 0.12, 620);
+
+      for (let i = 0; i <= 4; i++) {
+        const el = document.getElementById(`screen-${i}`);
+        if (el) el.classList.add('hidden');
+      }
+
+      const target = document.getElementById(`screen-${screenIdx}`);
+      if (target) {
+        target.classList.remove('hidden');
+        // הפעלה מחדש של אנימציית כניסה
+        target.classList.remove('screen-fade');
+        void target.offsetWidth;
+        target.classList.add('screen-fade');
+      }
+
+      currentScreen = screenIdx;
+      updateStepper(screenIdx);
+
+      if (screenIdx === 1 && !document.getElementById('coin-lab-box').classList.contains('hidden')) {
+        resizeCoinCanvas();
+      }
+      if (screenIdx === 2) {
+        initPepperLab();
+      }
+      if (screenIdx === 3) {
+        loadQuizQuestion();
+      }
+      if (screenIdx === 4) {
+        playSuccessSound();
+      }
+    }
+
+    function updateStepper(activeIdx) {
+      const pills = document.querySelectorAll('.step-pill');
+      pills.forEach(pill => {
+        const step = Number(pill.dataset.step);
+        if (step === activeIdx) {
+          pill.className = 'step-pill px-3 py-1 rounded-xl text-sm font-black bg-sky-600 text-white shadow';
+        } else if (step < activeIdx) {
+          pill.className = 'step-pill px-3 py-1 rounded-xl text-sm font-bold bg-emerald-100 text-emerald-800';
+        } else {
+          pill.className = 'step-pill px-3 py-1 rounded-xl text-sm font-bold text-sky-700';
+        }
+      });
+    }
+
+    /* =====================================================================
+       3. שלב 1: סימולציית המטבע והפיפטה
+       ===================================================================== */
+    const MAX_DROPS = 28; // נקודת השבירה של מתח הפנים
+    let currentDrops = 0;
+    let coinOverflowed = false;
+    let coinAwarded = false;
+    let selectedPredictionIdx = null;
+    let fallingDrops = [];
+    let spillParticles = [];
+    let coinAnimId = null;
+
+    function selectCoinPrediction(idx, label) {
+      initAudio();
+      playTone(540, 'triangle', 0.14, 0.2);
+      selectedPredictionIdx = idx;
+      document.getElementById('chosen-prediction-label').textContent = label;
+      document.getElementById('coin-poll-box').classList.add('hidden');
+      document.getElementById('coin-lab-box').classList.remove('hidden');
+      resizeCoinCanvas();
+      startCoinAnimation();
+    }
+
+    function resizeCoinCanvas() {
+      const canvas = document.getElementById('coin-canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || 600;
+      canvas.height = rect.height || 320;
+    }
+
+    function addWaterDrop(count) {
+      if (coinOverflowed) return;
+      initAudio();
+
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          if (coinOverflowed) return;
+          fallingDrops.push({
+            y: 78,
+            vy: 4 + i * 0.5,
+            radius: 7
+          });
+        }, i * 110);
+      }
+    }
+
+    function onDropLanded() {
+      if (coinOverflowed) return;
+      currentDrops++;
+      document.getElementById('drop-counter').textContent = currentDrops;
+      playDropSound(currentDrops);
+
+      const statusEl = document.getElementById('coin-status-text');
+      if (currentDrops < 10) {
+        statusEl.textContent = 'הטיפות מתחברות יחד ויוצרות שכבת מים שטוחה.';
+      } else if (currentDrops < 20) {
+        statusEl.textContent = 'שימו לב! מתח הפנים מחזיק כיפה עגולה ובולטת מעל שולי המטבע!';
+      } else if (currentDrops < MAX_DROPS) {
+        statusEl.textContent = '⚠️ הכיפה מתוחה מאוד! הקרום השקוף כמעט בשיא היכולת שלו...';
+      }
+
+      if (currentDrops >= MAX_DROPS) {
+        triggerCoinOverflow();
+      }
+    }
+
+    function triggerCoinOverflow() {
+      coinOverflowed = true;
+      playSplashSound();
+
+      document.getElementById('btn-add-drop').disabled = true;
+      document.getElementById('btn-add-five').disabled = true;
+      document.getElementById('coin-status-text').textContent = '💦 מתח הפנים נשבר! המים נשפכו לצדדים.';
+      document.getElementById('final-drop-count').textContent = currentDrops;
+      document.getElementById('final-drop-count-2').textContent = currentDrops;
+      document.getElementById('coin-result-box').classList.remove('hidden');
+
+      // יצירת רסיסי מים גולשים לצדדים
+      const canvas = document.getElementById('coin-canvas');
+      const cx = canvas.width / 2;
+      const coinY = canvas.height - 68;
+      for (let i = 0; i < 45; i++) {
+        const dir = i % 2 === 0 ? 1 : -1;
+        spillParticles.push({
+          x: cx + dir * (60 + Math.random() * 50),
+          y: coinY - 10 - Math.random() * 25,
+          vx: dir * (2 + Math.random() * 4.5),
+          vy: -1 + Math.random() * 3,
+          r: 4 + Math.random() * 5
+        });
+      }
+
+      // מתן ניקוד לכיתה (בונוס אם ניחשו את הטווח הנכון: 25-30 טיפות)
+      if (!coinAwarded) {
+        coinAwarded = true;
+        if (selectedPredictionIdx === 2) {
+          addScore(30);
+        } else {
+          addScore(20);
+        }
+      }
+    }
+
+    function resetCoinLab() {
+      currentDrops = 0;
+      coinOverflowed = false;
+      fallingDrops = [];
+      spillParticles = [];
+      document.getElementById('drop-counter').textContent = '0';
+      document.getElementById('btn-add-drop').disabled = false;
+      document.getElementById('btn-add-five').disabled = false;
+      document.getElementById('coin-result-box').classList.add('hidden');
+      document.getElementById('coin-status-text').textContent = 'לחצו על הכפתור כדי לטפטף טיפה ראשונה!';
+    }
+
+    function startCoinAnimation() {
+      if (coinAnimId) cancelAnimationFrame(coinAnimId);
+      const canvas = document.getElementById('coin-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function draw() {
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const cx = w / 2;
+        const tableY = h - 42;
+        const coinWidth = Math.min(240, w * 0.48);
+        const coinHeight = 24;
+        const coinTopY = tableY - coinHeight;
+
+        // שולחן מעבדה
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(0, tableY, w, h - tableY);
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, tableY, w, 5);
+
+        // שלולית מים על השולחן אם נשפך
+        if (coinOverflowed) {
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.75)';
+          ctx.beginPath();
+          ctx.ellipse(cx, tableY + 4, coinWidth * 0.95, 11, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // ציור המטבע (זהב-ברונזה תלת ממדי)
+        const coinGrad = ctx.createLinearGradient(cx - coinWidth / 2, coinTopY, cx + coinWidth / 2, tableY);
+        coinGrad.addColorStop(0, '#f59e0b');
+        coinGrad.addColorStop(0.5, '#fbbf24');
+        coinGrad.addColorStop(1, '#b45309');
+        ctx.fillStyle = coinGrad;
+        ctx.beginPath();
+        ctx.roundRect(cx - coinWidth / 2, coinTopY, coinWidth, coinHeight, 6);
+        ctx.fill();
+        ctx.strokeStyle = '#fef3c7';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // ציור כיפת המים (המניסקוס) על גבי המטבע
+        if (currentDrops > 0) {
+          const ratio = coinOverflowed ? 0.18 : Math.min(currentDrops / MAX_DROPS, 1);
+          const domeHeight = 14 + ratio * 74;
+          const domeWidth = coinWidth * (0.94 + ratio * 0.08);
+
+          const domeGrad = ctx.createRadialGradient(
+            cx - domeWidth * 0.15,
+            coinTopY - domeHeight * 0.55,
+            6,
+            cx,
+            coinTopY - domeHeight * 0.3,
+            domeWidth * 0.65
+          );
+          domeGrad.addColorStop(0, 'rgba(224, 242, 254, 0.95)');
+          domeGrad.addColorStop(0.45, 'rgba(56, 189, 248, 0.85)');
+          domeGrad.addColorStop(1, 'rgba(2, 132, 199, 0.92)');
+
+          ctx.fillStyle = domeGrad;
+          ctx.beginPath();
+          ctx.moveTo(cx - coinWidth * 0.47, coinTopY);
+          // עקומת בזייה היוצרת מניסקוס קמור ובולט מעבר לשפת המטבע
+          ctx.bezierCurveTo(
+            cx - domeWidth * 0.56,
+            coinTopY - domeHeight * 0.85,
+            cx + domeWidth * 0.56,
+            coinTopY - domeHeight * 0.85,
+            cx + coinWidth * 0.47,
+            coinTopY
+          );
+          ctx.closePath();
+          ctx.fill();
+
+          // קו מתאר זוהר של מתח הפנים
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          // מולקולות מים קטנות בתוך הכיפה להמחשה מדעית
+          const molCount = Math.min(currentDrops, 18);
+          for (let m = 0; m < molCount; m++) {
+            const angle = (m / molCount) * Math.PI;
+            const rX = (domeWidth * 0.34) * Math.cos(angle);
+            const rY = (domeHeight * 0.52) * Math.sin(angle);
+            const mx = cx + rX;
+            const my = coinTopY - 8 - rY;
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+            ctx.beginPath();
+            ctx.arc(mx, my, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // ציור הפיפטה מלמעלה
+        ctx.fillStyle = '#cbd5e1';
+        ctx.beginPath();
+        ctx.moveTo(cx - 14, 0);
+        ctx.lineTo(cx + 14, 0);
+        ctx.lineTo(cx + 6, 62);
+        ctx.lineTo(cx - 6, 62);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // מים בתוך הפיפטה
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.moveTo(cx - 10, 12);
+        ctx.lineTo(cx + 10, 12);
+        ctx.lineTo(cx + 4, 60);
+        ctx.lineTo(cx - 4, 60);
+        ctx.closePath();
+        ctx.fill();
+
+        // עדכון וציור טיפות נופלות
+        for (let i = fallingDrops.length - 1; i >= 0; i--) {
+          const d = fallingDrops[i];
+          d.y += d.vy;
+          d.vy += 0.45;
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(cx, d.y, d.radius, 0, Math.PI * 2);
+          ctx.moveTo(cx - d.radius, d.y);
+          ctx.lineTo(cx, d.y - d.radius * 2.1);
+          ctx.lineTo(cx + d.radius, d.y);
+          ctx.fill();
+
+          if (d.y >= coinTopY - 12) {
+            fallingDrops.splice(i, 1);
+            onDropLanded();
+          }
+        }
+
+        // עדכון וציור רסיסי גלישה
+        for (let i = spillParticles.length - 1; i >= 0; i--) {
+          const p = spillParticles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.35;
+
+          ctx.fillStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fill();
+
+          if (p.y > tableY) {
+            spillParticles.splice(i, 1);
+          }
+        }
+
+        coinAnimId = requestAnimationFrame(draw);
+      }
+
+      draw();
+    }
+
+    /* =====================================================================
+       4. שלב 2: ניסוי הפלפל השחור וטיפת הסבון
+       ===================================================================== */
+    let pepperParticles = [];
+    let pepperAnimId = null;
+    let soapRingRadius = 0;
+    let soapActive = false;
+    let activeToolType = null;
+    let toolTimer = 0;
+    let pepperAwarded = false;
+
+    function initPepperLab() {
+      const canvas = document.getElementById('pepper-canvas');
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || 420;
+      canvas.height = rect.height || 320;
+
+      resetPepperParticles(canvas.width, canvas.height);
+      startPepperAnimation();
+    }
+
+    function resetPepperParticles(w, h) {
+      pepperParticles = [];
+      soapRingRadius = 0;
+      soapActive = false;
+      activeToolType = null;
+      toolTimer = 0;
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const maxR = Math.min(w, h) * 0.41;
+
+      for (let i = 0; i < 140; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * (maxR - 8);
+        pepperParticles.push({
+          x: cx + Math.cos(angle) * r,
+          y: cy + Math.sin(angle) * r,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
+          size: 2.2 + Math.random() * 2.4
+        });
+      }
+    }
+
+    function resetPepperLab() {
+      const canvas = document.getElementById('pepper-canvas');
+      resetPepperParticles(canvas.width, canvas.height);
+      document.getElementById('pepper-feedback-title').textContent = '👈 הקערה מוכנה מחדש!';
+      document.getElementById('pepper-feedback-text').textContent = 'בחרו שוב איזה קיסם לטבול במרכז הקערה.';
+    }
+
+    function testPepperTool(tool) {
+      initAudio();
+      const canvas = document.getElementById('pepper-canvas');
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const bowlR = Math.min(canvas.width, canvas.height) * 0.43;
+
+      activeToolType = tool;
+      toolTimer = 55;
+
+      const titleEl = document.getElementById('pepper-feedback-title');
+      const textEl = document.getElementById('pepper-feedback-text');
+
+      if (tool === 'dry') {
+        playTone(340, 'sine', 0.14, 0.18);
+        titleEl.textContent = '🥢 קיסם עץ יבש: כמעט שום דבר לא קורה!';
+        titleEl.className = 'text-xl sm:text-2xl font-black text-amber-800 mb-2';
+        textEl.textContent = 'קיסם יבש לא משנה את הכוחות שבין מולקולות המים. מתח הפנים נשאר חזק ויציב, וגרגירי הפלפל נשארים במקומם.';
+      } else if (tool === 'water') {
+        playDropSound(5);
+        titleEl.textContent = '💧 קיסם טבול במים: המים פשוט מצטרפים למים!';
+        titleEl.className = 'text-xl sm:text-2xl font-black text-sky-800 mb-2';
+        textEl.textContent = 'מולקולות המים שעל הקיסם מתחברות מיד לשאר מולקולות המים בקערה. מתח הפנים נשאר אחיד והפלפל לא בורח לצדדים.';
+      } else if (tool === 'soap') {
+        playWhooshSound();
+        soapActive = true;
+        soapRingRadius = 10;
+
+        // דחיפה מהירה של כל גרגירי הפלפל לשולי הקערה!
+        pepperParticles.forEach(p => {
+          const dx = p.x - cx;
+          const dy = p.y - cy;
+          const dist = Math.max(Math.hypot(dx, dy), 1);
+          const targetR = bowlR - 6 - Math.random() * 10;
+          const speed = (targetR - dist) * 0.16;
+          p.vx = (dx / dist) * Math.max(speed, 2.5);
+          p.vy = (dy / dist) * Math.max(speed, 2.5);
+        });
+
+        titleEl.textContent = '🫧 בום! סבון הכלים שבר את מתח הפנים!';
+        titleEl.className = 'text-xl sm:text-2xl font-black text-pink-700 mb-2';
+        textEl.textContent = 'מולקולות הסבון החלישו ושברו את ״הקרום המתוח״ במרכז הקערה. מתח הפנים החזק שנשאר בשוליים משך אליו את כל גרגירי הפלפל בבת אחת!';
+        document.getElementById('pepper-next-actions').classList.remove('hidden');
+
+        if (!pepperAwarded) {
+          pepperAwarded = true;
+          addScore(30);
+        }
+      }
+    }
+
+    function startPepperAnimation() {
+      if (pepperAnimId) cancelAnimationFrame(pepperAnimId);
+      const canvas = document.getElementById('pepper-canvas');
+      const ctx = canvas.getContext('2d');
+
+      function draw() {
+        const w = canvas.width;
+        const h = canvas.height;
+        const cx = w / 2;
+        const cy = h / 2;
+        const bowlR = Math.min(w, h) * 0.44;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // מסגרת קערה חיצונית
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(cx, cy, bowlR + 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // המים שבקערה
+        const waterGrad = ctx.createRadialGradient(cx, cy, 15, cx, cy, bowlR);
+        waterGrad.addColorStop(0, '#bae6fd');
+        waterGrad.addColorStop(1, '#38bdf8');
+        ctx.fillStyle = waterGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, bowlR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // טבעת התפשטות הסבון
+        if (soapActive && soapRingRadius < bowlR) {
+          soapRingRadius += 6.5;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(cx, cy, soapRingRadius, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // עדכון וציור גרגירי פלפל שחור
+        pepperParticles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+
+          if (soapActive) {
+            p.vx *= 0.88;
+            p.vy *= 0.88;
+          } else {
+            // ריחוף עדין על פני המים
+            p.x += Math.sin(Date.now() * 0.002 + p.y) * 0.12;
+          }
+
+          // שמירה בתוך גבולות הקערה
+          const dx = p.x - cx;
+          const dy = p.y - cy;
+          const dist = Math.hypot(dx, dy);
+          if (dist > bowlR - 7) {
+            p.x = cx + (dx / dist) * (bowlR - 7);
+            p.y = cy + (dy / dist) * (bowlR - 7);
+          }
+
+          ctx.fillStyle = '#1e293b';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // ציור קיסם נוגע במרכז בעת הפעולה
+        if (toolTimer > 0) {
+          toolTimer--;
+          ctx.strokeStyle = '#d97706';
+          ctx.lineWidth = 8;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(cx + 85, cy - 95);
+          ctx.lineTo(cx, cy);
+          ctx.stroke();
+
+          if (activeToolType === 'soap') {
+            ctx.fillStyle = '#f472b6';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 9, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (activeToolType === 'water') {
+            ctx.fillStyle = '#0284c7';
+            ctx.beginPath();
+            ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        pepperAnimId = requestAnimationFrame(draw);
+      }
+
+      draw();
+    }
+
+    /* =====================================================================
+       5. שלב 3: חידון המומחים הכיתתי (5 שאלות)
+       ===================================================================== */
+    const QUIZ_QUESTIONS = [
+      {
+        emoji: '🦟',
+        tag: 'מתח פנים בטבע',
+        question: 'איך חרק ״רץ-המים״ מצליח ללכת על פני הנחל בלי לשקוע?',
+        options: [
+          'הוא קל מאוד, ומתח הפנים של המים מחזיק אותו כמו טרמפולינה מתוחה',
+          'יש לו מנועים קטנים מתחת לרגליים',
+          'המים בנחל קפואים לגמרי',
+          'הוא שותה את כל המים שלפניו'
+        ],
+        correctIndex: 0,
+        explanation: 'נכון מאוד! רגליו הארוכות מפזרות את משקלו הקל, וקרום מתח הפנים של המים אינו נקרע תחתיו.'
+      },
+      {
+        emoji: '📎',
+        tag: 'אתגר המעבדה',
+        question: 'אטב מתכת כבד יותר ממים. איך בכל זאת אפשר לגרום לו לצוף על פני כוס מים?',
+        options: [
+          'לזרוק אותו מגובה רב לתוך הכוס',
+          'להניח אותו בעדינות רבה בשכיבה על פני המים כדי לא לקרוע את מתח הפנים',
+          'לערבב את המים במהירות עם כפית',
+          'להוסיף הרבה סבון כלים למים'
+        ],
+        correctIndex: 1,
+        explanation: 'מדויק! כשמניחים אטב בעדינות בשכיבה, מתח הפנים תומך בו מלמטה – למרות שמתכת צפופה יותר ממים!'
+      },
+      {
+        emoji: '💧',
+        tag: 'צורת הטיפה',
+        question: 'למה טיפת מים קטנה על עלה חלק נראית כמו כדור עגול ולא מתפזרת שטוח?',
+        options: [
+          'כי העלה דוחף אותה מלמטה',
+          'כי מולקולות המים מושכות זו את זו פנימה מכל הכיוונים אל המרכז',
+          'כי הרוח מנפחת את הטיפה',
+          'כי יש בתוכה אוויר חם'
+        ],
+        correctIndex: 1,
+        explanation: 'מעולה! המשיכה ההדדית בין מולקולות המים מושכת את כל שטח הפנים פנימה ויוצרת צורה כדורית.'
+      },
+      {
+        emoji: '🍽️',
+        tag: 'מדע במטבח',
+        question: 'למה כשאנחנו שוטפים צלחת שמנונית אנחנו חייבים להשתמש בסבון ולא רק במים?',
+        options: [
+          'כי סבון צובע את המים בלבן',
+          'כי הסבון שובר את מתח הפנים של המים ועוזר להם להתחבר לשומן ולשטוף אותו',
+          'כי סבון מקרר את הצלחת',
+          'כי למים לבד אין מולקולות'
+        ],
+        correctIndex: 1,
+        explanation: 'כל הכבוד! סבון מוריד את מתח הפנים של המים ומאפשר להם לחדור ללכלוך ולפרק טיפות שומן.'
+      },
+      {
+        emoji: '⛵',
+        tag: 'ניסוי הסירה המונעת בסבון',
+        question: 'הנחנו סירת קרטון קטנה על המים וטפטפנו טיפת סבון מאחוריה. מה יקרה לסירה?',
+        options: [
+          'הסירה תזנק קדימה! הסבון שובר את מתח הפנים מאחור, והמים שלפניה מושכים אותה',
+          'הסירה תטבע מיד לקרקעית',
+          'הסירה תיסע אחורה אל תוך הסבון',
+          'הסירה תישאר במקום ולא תזוז'
+        ],
+        correctIndex: 0,
+        explanation: 'מדהים! הסבון מחליש את מתח הפנים מאחורי הסירה, ולכן מתח הפנים החזק שלפניה מושך אותה קדימה כמו מנוע!'
+      }
+    ];
+
+    let currentQuestionIdx = 0;
+    let questionAnswered = false;
+
+    function loadQuizQuestion() {
+      questionAnswered = false;
+      const q = QUIZ_QUESTIONS[currentQuestionIdx];
+
+      document.getElementById('quiz-progress').textContent = `${currentQuestionIdx + 1} / ${QUIZ_QUESTIONS.length}`;
+      document.getElementById('quiz-emoji').textContent = q.emoji;
+      document.getElementById('quiz-tag').textContent = q.tag;
+      document.getElementById('quiz-question').textContent = q.question;
+
+      const optionsContainer = document.getElementById('quiz-options');
+      optionsContainer.innerHTML = '';
+
+      const letters = ['א׳', 'ב׳', 'ג׳', 'ד׳'];
+
+      q.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-opt-btn btn-3d bg-white hover:bg-sky-50 border-3 border-sky-300 rounded-2xl p-4 sm:p-5 text-right flex items-center gap-4 cursor-pointer transition';
+        btn.innerHTML = `
+          <span class="w-11 h-11 shrink-0 rounded-xl bg-sky-100 border-2 border-sky-300 text-sky-900 font-black text-xl flex items-center justify-center">${letters[idx]}</span>
+          <span class="text-lg sm:text-xl font-bold text-slate-900 leading-snug">${optText}</span>
+        `;
+        btn.onclick = () => selectQuizAnswer(idx, btn);
+        optionsContainer.appendChild(btn);
+      });
+
+      const fbBox = document.getElementById('quiz-feedback-box');
+      fbBox.classList.add('hidden');
+    }
+
+    function selectQuizAnswer(selectedIdx, clickedBtn) {
+      if (questionAnswered) return;
+      questionAnswered = true;
+      initAudio();
+
+      const q = QUIZ_QUESTIONS[currentQuestionIdx];
+      const allBtns = document.querySelectorAll('.quiz-opt-btn');
+
+      allBtns.forEach((b, idx) => {
+        b.disabled = true;
+        if (idx === q.correctIndex) {
+          b.classList.remove('bg-white', 'border-sky-300');
+          b.classList.add('bg-emerald-100', 'border-emerald-500');
+        }
+      });
+
+      const fbBox = document.getElementById('quiz-feedback-box');
+      const fbTitle = document.getElementById('quiz-feedback-title');
+      const fbExp = document.getElementById('quiz-feedback-explanation');
+
+      if (selectedIdx === q.correctIndex) {
+        playSuccessSound();
+        addScore(20);
+        fbBox.className = 'rounded-3xl p-5 border-3 bg-emerald-50 border-emerald-400 flex flex-col sm:flex-row items-center justify-between gap-4';
+        fbTitle.textContent = '🎉 תשובה נכונה! (+20 נקודות לכיתה)';
+        fbTitle.className = 'text-xl sm:text-2xl font-black text-emerald-900';
+      } else {
+        playErrorSound();
+        clickedBtn.classList.remove('bg-white', 'border-sky-300');
+        clickedBtn.classList.add('bg-rose-100', 'border-rose-400');
+        fbBox.className = 'rounded-3xl p-5 border-3 bg-amber-50 border-amber-400 flex flex-col sm:flex-row items-center justify-between gap-4';
+        fbTitle.textContent = '💡 כמעט! הנה ההסבר המדעי:';
+        fbTitle.className = 'text-xl sm:text-2xl font-black text-amber-900';
+      }
+
+      fbExp.textContent = q.explanation;
+
+      const nextBtn = document.getElementById('btn-next-question');
+      if (currentQuestionIdx === QUIZ_QUESTIONS.length - 1) {
+        nextBtn.textContent = 'לקבלת תעודת החוקרים 🎓';
+      } else {
+        nextBtn.textContent = 'לשאלה הבאה ◀';
+      }
+
+      fbBox.classList.remove('hidden');
+    }
+
+    function nextQuizQuestion() {
+      if (currentQuestionIdx < QUIZ_QUESTIONS.length - 1) {
+        currentQuestionIdx++;
+        loadQuizQuestion();
+      } else {
+        goToScreen(4);
+      }
+    }
+
+    /* =====================================================================
+       6. אתחול מחדש ובועות רקע
+       ===================================================================== */
+    function restartWholeGame() {
+      totalScore = 0;
+      document.getElementById('score-display').textContent = '0';
+
+      // איפוס שלב 1
+      coinAwarded = false;
+      selectedPredictionIdx = null;
+      document.getElementById('coin-poll-box').classList.remove('hidden');
+      document.getElementById('coin-lab-box').classList.add('hidden');
+      resetCoinLab();
+
+      // איפוס שלב 2
+      pepperAwarded = false;
+      document.getElementById('pepper-next-actions').classList.add('hidden');
+      document.getElementById('pepper-feedback-title').textContent = '👈 בחרו אחד משלושת הקיסמים כדי לבדוק!';
+      document.getElementById('pepper-feedback-title').className = 'text-xl sm:text-2xl font-black text-slate-800 mb-2';
+      document.getElementById('pepper-feedback-text').textContent = 'נסו לבדוק קודם מה קורה עם קיסם יבש או קיסם עם מים, ורק אז בדקו את קיסם הסבון!';
+
+      // איפוס שלב 3
+      currentQuestionIdx = 0;
+
+      goToScreen(0);
+    }
+
+    function createBackgroundBubbles() {
+      const container = document.getElementById('bubbles-container');
+      for (let i = 0; i < 14; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-bubble';
+        const size = 24 + Math.random() * 65;
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = `${Math.random() * 100}vw`;
+        bubble.style.animationDuration = `${12 + Math.random() * 14}s`;
+        bubble.style.animationDelay = `${-Math.random() * 15}s`;
+        container.appendChild(bubble);
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (currentScreen === 1 && !document.getElementById('coin-lab-box').classList.contains('hidden')) {
+        resizeCoinCanvas();
+      }
+      if (currentScreen === 2) {
+        initPepperLab();
+      }
+    });
+
+    window.onload = function () {
+      createBackgroundBubbles();
+    };
+  </script>
+</body>
+</html>
